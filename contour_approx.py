@@ -1,7 +1,7 @@
-import numpy as np
-import pandas as pd
+from PIL import Image
 import imutils
 import cv2
+import numpy as np
 
 image = cv2.imread("C:\\Users\\DeathRay3000\\Documents\\Fun Code\\CookieCutter\\square.jpeg")
 print("Height:", image.shape[0], "Width:", image.shape[1])
@@ -34,36 +34,45 @@ for eps in np.linspace(0.001, 0.05, 10):
     cv2.putText(output, text, (x, yCoord - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
 
     print("[INFO] {}".format(text))
-    print(approx)
+    # j print(approx)
     cv2.imshow("Approximated contour", output)
     cv2.waitKey(0)
 
     if eps == .05:
         square = approx
-        print(type(approx))
+        # print(type(approx))
         currMax, currMin = 0, image.shape[1]
         data = []
         arr = np.array(data)
-        print(data)
+        # print(data)
         for i in square:
             for x, y in i:
                 data = np.append(data, x)
         newMax = np.max(data)  # these are the lowest and highest points of the image
         newMin = np.min(data)
 
-        # print(findMax, findMin)
-        # newMax = np.max(data)
-        # must only get in the first spot not the second location
-        # newMin = np.min(data)
-        # print(newMax, newMin)
-        # for x, y in i:  # can probably simplify this
-        #    if currMax == x:
-        #        cropX = image.shape[0] - currMin
-        #    if currMin == y:
-        #        cropY = image.shape[1] - currMax
-        #    print(cropX, cropY)
-        # print(x, y)
+        topHalf = image.shape[0] - newMax
+        bottomHalf = image.shape[0] - newMin
+        # print(type(topHalf), type(bottomHalf), type(image.shape[1]))
+        # print(topHalf, bottomHalf)
+        cropImage = output[int(topHalf) - 40: int(bottomHalf) - 40, : int(image.shape[1])]
+        # cropImage = output[int(newMin) - 40: int(newMax), 0: int(image.shape[1])]
+        cv2.imshow("Cropped image", cropImage)
+        cv2.waitKey(0)
 
-        # TODO
-        # need to get the max and min of the coordinates and then crop the image
-        # to the get the general shape of the coordinates
+    # print(findMax, findMin)
+    # newMax = np.max(data)
+    # must only get in the first spot not the second location
+    # newMin = np.min(data)
+    # print(newMax, newMin)
+    # for x, y in i:  # can probably simplify this
+    #    if currMax == x:
+    #        cropX = image.shape[0] - currMin
+    #    if currMin == y:
+    #        cropY = image.shape[1] - currMax
+    #    print(cropX, cropY)
+    # print(x, y)
+
+    # TODO
+    # need to get the max and min of the coordinates and then crop the image
+    # to the get the general shape of the coordinates
