@@ -3,7 +3,7 @@ import imutils
 import cv2
 import numpy as np
 
-image = cv2.imread("C:\\Users\\DeathRay3000\\Documents\\Fun Code\\CookieCutter\\square.jpeg")
+image = cv2.imread("/Users/tylerholstein/Documents/Fun Code/CookieCutter/square.jpeg")
 print("Height:", image.shape[0], "Width:", image.shape[1])
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
@@ -47,15 +47,15 @@ for eps in np.linspace(0.001, 0.05, 10):
         # print(data)
         for i in square:
             for x, y in i:
-                data = np.append(data, x)
+                data = np.append(data, y)
         newMax = np.max(data)  # these are the lowest and highest points of the image
         newMin = np.min(data)
 
-        topHalf = image.shape[0] - newMax
-        bottomHalf = image.shape[0] - newMin
+        topHalf = image.shape[1] - newMax
+        bottomHalf = image.shape[1] - newMin
         # print(type(topHalf), type(bottomHalf), type(image.shape[1]))
-        # print(topHalf, bottomHalf)
-        cropImage = output[int(topHalf) - 40: int(bottomHalf) - 40, : int(image.shape[1])]
+        print(int(topHalf), int(bottomHalf))
+        cropImage = output[int(topHalf): int(bottomHalf), 0: int(image.shape[1])]
         # cropImage = output[int(newMin) - 40: int(newMax), 0: int(image.shape[1])]
         cv2.imshow("Cropped image", cropImage)
         cv2.waitKey(0)
