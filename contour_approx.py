@@ -1,9 +1,10 @@
 import numpy as np
+import pandas as pd
 import imutils
 import cv2
 
-image = cv2.imread("/Users/tylerholstein/Documents/Fun Code/CookieCutter/square.jpeg")
-print("Height:",image.shape[0], "Width:", image.shape[1])
+image = cv2.imread("C:\\Users\\DeathRay3000\\Documents\\Fun Code\\CookieCutter\\square.jpeg")
+print("Height:", image.shape[0], "Width:", image.shape[1])
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
 
@@ -36,23 +37,33 @@ for eps in np.linspace(0.001, 0.05, 10):
     print(approx)
     cv2.imshow("Approximated contour", output)
     cv2.waitKey(0)
+
     if eps == .05:
         square = approx
+        print(type(approx))
         currMax, currMin = 0, image.shape[1]
+        data = []
+        arr = np.array(data)
+        print(data)
         for i in square:
             for x, y in i:
-                print(np.max(i))
-                # must only get in the first spot not the second location
-                print(np.min(x))
-                # print("find", currMax, currMin)
-            #for x, y in i:  # can probably simplify this
-            #    if currMax == x:
-            #        cropX = image.shape[0] - currMin
-            #    if currMin == y:
-            #        cropY = image.shape[1] - currMax
-            #    print(cropX, cropY)
-                # print(x, y)
+                data = np.append(data, x)
+        newMax = np.max(data)  # these are the lowest and highest points of the image
+        newMin = np.min(data)
 
-                # TODO
-                # need to get the max and min of the coordinates and then crop the image
-                # to the get the general shape of the coordinates
+        # print(findMax, findMin)
+        # newMax = np.max(data)
+        # must only get in the first spot not the second location
+        # newMin = np.min(data)
+        # print(newMax, newMin)
+        # for x, y in i:  # can probably simplify this
+        #    if currMax == x:
+        #        cropX = image.shape[0] - currMin
+        #    if currMin == y:
+        #        cropY = image.shape[1] - currMax
+        #    print(cropX, cropY)
+        # print(x, y)
+
+        # TODO
+        # need to get the max and min of the coordinates and then crop the image
+        # to the get the general shape of the coordinates
