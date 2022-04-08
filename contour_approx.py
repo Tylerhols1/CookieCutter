@@ -3,7 +3,7 @@ import imutils
 import cv2
 import numpy as np
 
-image = cv2.imread("/Users/tylerholstein/Documents/Fun Code/CookieCutter/square.jpeg")
+image = cv2.imread("C:\\Users\\DeathRay3000\\Documents\\Fun Code\\CookieCutter\\guts_01.png")
 print("Height:", image.shape[0], "Width:", image.shape[1])
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
@@ -38,24 +38,29 @@ for eps in np.linspace(0.001, 0.05, 10):
     cv2.imshow("Approximated contour", output)
     cv2.waitKey(0)
 
-    if eps == .05:
+    if eps == .05:  # could look at changing this to check for the number of points
         square = approx
         # print(type(approx))
         currMax, currMin = 0, image.shape[1]
         data = []
         arr = np.array(data)
         # print(data)
+        print(square)
         for i in square:
             for x, y in i:
                 data = np.append(data, y)
+        print(data)
         newMax = np.max(data)  # these are the lowest and highest points of the image
         newMin = np.min(data)
-
-        topHalf = image.shape[1] - newMax
+        # print(newMax, newMin)
+        if image.shape[1] - newMax >= 0:  # this won't allow the topHalf value to be a negative value
+            topHalf = image.shape[1] - newMax
+        else:
+            topHalf = 0
         bottomHalf = image.shape[1] - newMin
         # print(type(topHalf), type(bottomHalf), type(image.shape[1]))
         print(int(topHalf), int(bottomHalf))
-        cropImage = output[int(topHalf): int(bottomHalf), 0: int(image.shape[1])]
+        cropImage = image[int(topHalf): int(bottomHalf), 0: int(image.shape[1])]
         # cropImage = output[int(newMin) - 40: int(newMax), 0: int(image.shape[1])]
         cv2.imshow("Cropped image", cropImage)
         cv2.waitKey(0)
