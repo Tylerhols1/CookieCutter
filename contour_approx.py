@@ -3,7 +3,7 @@ import imutils
 import cv2
 import numpy as np
 
-image = cv2.imread("/Users/tylerholstein/Documents/Fun Code/CookieCutter/guts_02.jpeg")
+image = cv2.imread("/Users/tylerholstein/Documents/Fun Code/CookieCutter/berserkPanel.jpeg")
 
 cv2.imshow("ORIGINAL PIC", image)
 cv2.waitKey(0)
@@ -11,13 +11,17 @@ cv2.waitKey(0)
 print("Height:", image.shape[0], "Width:", image.shape[1])
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# canny = cv2.Canny(gray, ) ## try this instead of thresh
-thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)[1]
+### could try cropping the photo so it has to pick a different panel
+
+# canny = cv2.Canny(image, 149, 150)  ## try this instead of thresh
+thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY_INV)[1]
 
 cv2.imshow("THRESH", thresh)
 cv2.waitKey(0)
 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 cnts = imutils.grab_contours(cnts)  # changing the panels has to come from this variable cnts
+
+print(cv2.contourArea)
 c = max(cnts, key=cv2.contourArea)
 output = image.copy()
 
