@@ -4,13 +4,22 @@ import cv2
 import numpy as np
 
 
+def create_collage():
+    img1 = Image.open(r"guts_02.jpeg").convert('RGB')
+    img2 = Image.open(r"berserkPanel.jpeg")
+    x, y = img1.size
+    print(img1.mode, img2.mode)
+    img1.paste(img2, (0, 0))
+    img1.show()
+
+
 def image_show(image, window_text):
     cv2.imshow("{}".format(window_text), image)
     cv2.waitKey(0)
 
 
 def initialize_image():
-    image = cv2.imread("C:\\Users\\DeathRay3000\\Documents\\Fun Code\\CookieCutter\\iu.jpeg")
+    image = cv2.imread(r"berserkPanel.jpeg")
     image_show(image, "Original Pic")
 
     print("Height:", image.shape[0], "Width:", image.shape[1])
@@ -23,7 +32,6 @@ def thresh_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image_show(gray, "GRAY")
     ret, thresh = cv2.threshold(gray, 155, 255, cv2.THRESH_BINARY)
-    # thresh = cv2.Canny(gray, 190, 200)
     image_show(thresh, "Thresh")
     find_contour(image, thresh)
 
@@ -85,6 +93,7 @@ def find_contour(image, thresh):
 
 
 def main():
+    # create_collage()
     initialize_image()
 
 
