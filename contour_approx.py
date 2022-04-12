@@ -3,6 +3,8 @@ import imutils
 import cv2
 import numpy as np
 
+new_mask = 0
+
 
 def create_collage():
     img1 = Image.open(r"guts_02.jpeg").convert('RGB')
@@ -19,24 +21,25 @@ def image_show(image, window_text):
 
 
 def initialize_image():
-    image = cv2.imread(r"berserkPanel.jpeg")
+    image = cv2.imread(r"guts_01.png")
     image_show(image, "Original Pic")
 
     print("Height:", image.shape[0], "Width:", image.shape[1])
-    thresh_image(image)
+    thresh_image(image, 0)
     # could try cropping the photo so it has to pick a different panel
     # canny = cv2.Canny(image, 149, 150)  ## try this instead of thresh
 
 
-def thresh_image(image):
+def thresh_image(image, i):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image_show(gray, "GRAY")
-    ret, thresh = cv2.threshold(gray, 155, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(gray, 155, 255, i)
     image_show(thresh, "Thresh")
     find_contour(image, thresh)
 
 
 def find_contour(image, thresh):
+    global new_mask
     cnts = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)  # changing the panels has to come from this variable cnts
 
@@ -82,14 +85,27 @@ def find_contour(image, thresh):
 
             print("MaxY and MinY", maxY, minY)
             if maxY == 0 or maxY < minY:
-                cropImage = image[0: int(image.shape[0]), 0: int(image.shape[1])]  # could have this redo thresh so it
-                # tries again with a different mask
-            else:
-                cropImage = image[int(minY): int(maxY), 0: int(image.shape[1])]
-            print(cropImage)
+                cv2.destroyAllWindows()
+                new_mask = new_mask + 1
+                thresh_image(image, new_mask)
 
-            # cropImage = output[int(newMin) - 40: int(newMax), : int(image.shape[1])]
-            image_show(cropImage, "Cropped image")
+            elif int(image.shape[0]) - 10 <= maxY <= int(image.shape[0]):
+                cv2.destroyAllWindows()
+                new_mask = new_mask + 1
+                thresh_image(image, new_mask)
+
+            elif int(image.shape[1]) - 10 <= maxY <= int(image.shape[1]):
+                cv2.destroyAllWindows()
+                new_mask = new_mask + 1
+                thresh_image(image, new_mask)
+                
+            else:
+                # cv2.destroyAllWindows()
+                # new_mask = new_mask + 1
+                # thresh_image(image, new_mask)
+                crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
+                print(crop_image)
+                image_show(crop_image, "Cropped image")
 
 
 def main():
