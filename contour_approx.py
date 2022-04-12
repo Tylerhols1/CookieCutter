@@ -52,6 +52,8 @@ def image_save(crop_image):
     cv2.imwrite(new_name, crop_image)
     # TODO
     'figure out how to log information of whether it saved or not'
+    'could also write so it tracks how many times it had to apply'
+    'new threshold type'
 
 
 def initialize_image():
