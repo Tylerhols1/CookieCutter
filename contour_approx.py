@@ -98,8 +98,8 @@ def thresh_image(image, i):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 155, 255, i)
-    cv2.imshow("thresh", thresh)
-    cv2.waitKey(0)
+    # cv2.imshow("thresh", thresh)
+    # cv2.waitKey(0)
     find_contour(image, thresh)
 
 
