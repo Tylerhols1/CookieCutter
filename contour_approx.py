@@ -73,6 +73,7 @@ def initialize_image():
         new_mask = 0
         IMAGE_NAME = os.path.join(IMAGE_DIR, file)
         image = cv2.imread(IMAGE_NAME)
+        print(file)
         thresh_image(image, 0)
 
 
@@ -141,35 +142,58 @@ def find_contour(image, thresh):
         cv2.drawContours(output, [approx], -1, (0, 0, 255), 3)
         if eps == .05:  # could look at changing this to check for the number of points
             dataY = []
+            dataX = []
+            # new dataX
+            np.array(dataX)
             np.array(dataY)
 
             for i in approx:
                 for x, y in i:
+                    dataX = np.append(dataX, x)
                     dataY = np.append(dataY, y)
 
             maxY = np.max(dataY)  # these are the lowest and highest points of the image
             minY = np.min(dataY)
 
-            if int(maxY) < 0 or int(maxY) < int(minY):
-                new_mask = new_mask + 1
-                thresh_image(image, new_mask)
+            maxX = np.max(dataX)
+            minX = np.min(dataX)
+            print(image.shape[0], image.shape[1])
+            print("max and min for x", maxX, minX, "\n")
+
+            # if int(maxY) < 0 or int(maxY) < int(minY):
+            #    new_mask = new_mask + 1
+            #    thresh_image(image, new_mask)
 
             # To safeguard against images not being approximated with smaller coordinates
             # than the overall image. It has it resend the image, so it is converted with
             # a new threshold type
-            elif int(image.shape[0]) - 10 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
+            if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
                 new_mask = new_mask + 1
                 thresh_image(image, new_mask)
 
-            elif int(image.shape[1]) - 10 <= int(maxY) <= int(image.shape[1]) and new_mask < 4:
-                new_mask = new_mask + 1  # look at randomizing this so that it checks different threshold types
-                thresh_image(image, new_mask)
+            # elif int(image.shape[1]) - 10 <= int(maxY) <= int(image.shape[1]) and new_mask < 4:
+            #    new_mask = new_mask + 1  # look at randomizing this so that it checks different threshold types
+            #    thresh_image(image, new_mask)
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
             # whether the threshold type counter (new_mask) runs out, or if a valid crop image is found
             else:
-                crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
-                image_save(crop_image)
+                # This if statement determines whether there were less than 4 points it then
+                # crops the image from the minX variable all the way to image.shape[1] to
+                # better approximate the panel it was trying to grab. Otherwise, it just crops
+                # to the 3 point contour approximation which is most likely not the entirety of
+                # the panel we want
+                if len(approx) < 4:
+                    crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
+                    cv2.imshow("crop", crop_image)
+                    cv2.waitKey(0)
+                else:
+                    crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
+                    # crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
+                    cv2.imshow("crop", crop_image)
+                    cv2.waitKey(0)
+                # crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
+                # image_save(crop_image)
 
 
 def main():
