@@ -68,10 +68,9 @@ def initialize_image():
     NONE
     """
     global IMAGE_NAME
-    # IMAGE_NAME = os.path.join(IMAGE_DIR, "guts_03.jpg")
-    # image = cv2.imread(IMAGE_NAME)
-    # thresh_image(image, 0)
+    global new_mask
     for file in IMAGE_LIST:
+        new_mask = 0
         IMAGE_NAME = os.path.join(IMAGE_DIR, file)
         image = cv2.imread(IMAGE_NAME)
         thresh_image(image, 0)
@@ -98,6 +97,8 @@ def thresh_image(image, i):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 155, 255, i)
+    cv2.imshow("thresh", thresh)
+    cv2.waitKey(0)
     find_contour(image, thresh)
 
 
@@ -138,8 +139,6 @@ def find_contour(image, thresh):
         approx = cv2.approxPolyDP(c, eps * perimeter, True)
         output = image.copy()
         cv2.drawContours(output, [approx], -1, (0, 0, 255), 3)
-        # cv2.imshow("output", output)
-        # cv2.waitKey(0)
         if eps == .05:  # could look at changing this to check for the number of points
             dataY = []
             np.array(dataY)
@@ -150,13 +149,11 @@ def find_contour(image, thresh):
 
             maxY = np.max(dataY)  # these are the lowest and highest points of the image
             minY = np.min(dataY)
-            print("approximation", approx)
-            print("height", image.shape[0], "width", image.shape[1])
-            print("max", maxY, "min", minY, "\n\n\n\n")
 
             if int(maxY) < 0 or int(maxY) < int(minY):
                 new_mask = new_mask + 1
                 thresh_image(image, new_mask)
+
             # To safeguard against images not being approximated with smaller coordinates
             # than the overall image. It has it resend the image, so it is converted with
             # a new threshold type
@@ -165,7 +162,7 @@ def find_contour(image, thresh):
                 thresh_image(image, new_mask)
 
             elif int(image.shape[1]) - 10 <= int(maxY) <= int(image.shape[1]) and new_mask < 4:
-                new_mask = new_mask + 1
+                new_mask = new_mask + 1  # look at randomizing this so that it checks different threshold types
                 thresh_image(image, new_mask)
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
@@ -173,8 +170,6 @@ def find_contour(image, thresh):
             else:
                 crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
                 image_save(crop_image)
-                # cv2.imshow("crop", crop_image)
-                # cv2.waitKey(0)
 
 
 def main():
