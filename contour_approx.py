@@ -181,19 +181,21 @@ def find_contour(image, thresh):
                 # This if statement determines whether there were less than 4 points it then
                 # crops the image from the minX variable all the way to image.shape[1] to
                 # better approximate the panel it was trying to grab. Otherwise, it just crops
-                # to the 3 point contour approximation which is most likely not the entirety of
+                # to the 4> point contour approximation which is most likely not the entirety of
                 # the panel we want
+
+                # if there is an issue with an image not cropping correctly I could check to see how many points it has
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
-                    cv2.imshow("crop", crop_image)
-                    cv2.waitKey(0)
+                    # cv2.imshow("crop", crop_image)
+                    # cv2.waitKey(0)
+                    image_save(crop_image)
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
+                    # cv2.imshow("crop", crop_image)
+                    # cv2.waitKey(0)
                     # crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
-                    cv2.imshow("crop", crop_image)
-                    cv2.waitKey(0)
-                # crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
-                # image_save(crop_image)
+                    image_save(crop_image)
 
 
 def main():
