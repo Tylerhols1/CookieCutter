@@ -182,10 +182,14 @@ def find_contour(image, thresh, index):
             if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
                 new_mask = new_mask + 1
                 thresh_image(image, new_mask, index)
-            # elif maxY == maxX
-            # elif int(image.shape[1]) - 10 <= int(maxY) <= int(image.shape[1]) and new_mask < 4:
-            #    new_mask = new_mask + 1  # look at randomizing this so that it checks different threshold types
-            #    thresh_image(image, new_mask)
+
+            elif maxX - 10 < minX or maxY - 10 < minY:
+                new_mask += 1
+                thresh_image(image, new_mask, index)
+
+            elif maxX == minX or maxY == minY:
+                index += 1
+                thresh_image(image, new_mask, index)
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
             # whether the threshold type counter (new_mask) runs out, or if a valid crop image is found
@@ -203,16 +207,15 @@ def find_contour(image, thresh, index):
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
                     # image_save(crop_image)
-                    if ASK_PANELS:
+                    if ASK_PANELS and index < 13:
                         new_panel(image, index)
-
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
                     cv2.imshow("crop", crop_image)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
                     # image_save(crop_image)
-                    if ASK_PANELS:
+                    if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
 
