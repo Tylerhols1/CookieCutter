@@ -10,8 +10,11 @@ IMAGE_LIST = os.listdir(IMAGE_DIR)
 CROPPED_DIR = os.path.join(CURRENT_DIR, "cropped")
 IMAGE_NAME = ""
 new_mask = 0
+
+# Set to true if you want to be prompted to check for new contours in the image.
+# Otherwise it grabs the largest contour area
 ASK_PANELS = True
-ASK_SAVE = False
+ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
 
 
 def create_collage():
@@ -41,6 +44,7 @@ def image_save(crop_image, index):
     Parameters
     ----------
     crop_image
+    index
 
     Returns
     -------
