@@ -11,6 +11,7 @@ CROPPED_DIR = os.path.join(CURRENT_DIR, "cropped")
 IMAGE_NAME = ""
 new_mask = 0
 ASK_PANELS = True
+ASK_SAVE = False
 
 
 def create_collage():
@@ -28,7 +29,7 @@ def create_collage():
     img1.show()
 
 
-def image_save(crop_image):
+def image_save(crop_image, index):
     """
     Writes cropped image to the cropped directory.
 
@@ -49,8 +50,17 @@ def image_save(crop_image):
         os.mkdir(CROPPED_DIR)
 
     file_name = os.path.basename(IMAGE_NAME)
-    new_name = os.path.join(CROPPED_DIR, "cropped_" + file_name)
-    cv2.imwrite(new_name, crop_image)
+    new_name = os.path.join(CROPPED_DIR, "cropped0{}_".format(str(index)) + file_name)
+
+    if ASK_SAVE:
+        answer = input("Did you want to save this? Yes/no || Y/N").upper()
+        if answer == "YES" or answer == "Y" and index == 0:
+            new_name = os.path.join(CROPPED_DIR, "cropped_0" + file_name)
+            cv2.imwrite(new_name, crop_image)
+        else:
+            cv2.imwrite(new_name, crop_image)
+    else:
+        cv2.imwrite(new_name, crop_image)
     # TODO
     'figure out how to log information of whether it saved or not'
     'could also write so it tracks how many times it had to apply'
@@ -134,6 +144,7 @@ def find_contour(image, thresh, index):
     NONE
     """
     global new_mask
+    print(index)
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
@@ -206,7 +217,7 @@ def find_contour(image, thresh, index):
                     cv2.imshow("crop", crop_image)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
-                    # image_save(crop_image)
+                    image_save(crop_image, index)
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
@@ -214,7 +225,7 @@ def find_contour(image, thresh, index):
                     cv2.imshow("crop", crop_image)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
-                    # image_save(crop_image)
+                    image_save(crop_image, index)
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
@@ -223,7 +234,8 @@ def new_panel(image, index):
     answer = input("Would you like to check for more panels\n").upper()
     if answer == "YES":
         threshold_type = 0
-        thresh_image(image, threshold_type, index + 1)
+        if index < 13:
+            thresh_image(image, threshold_type, index + 1)
 
 
 def main():
