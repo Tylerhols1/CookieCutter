@@ -10,6 +10,7 @@ IMAGE_LIST = os.listdir(IMAGE_DIR)
 CROPPED_DIR = os.path.join(CURRENT_DIR, "cropped")
 IMAGE_NAME = ""
 new_mask = 0
+ASK_PANELS = True
 
 
 def create_collage():
@@ -74,10 +75,14 @@ def initialize_image():
         IMAGE_NAME = os.path.join(IMAGE_DIR, file)
         image = cv2.imread(IMAGE_NAME)
         print(file)
-        thresh_image(image, 0)
+        thresh_image(image, 0, 0)
+
+    # IMAGE_NAME = os.path.join(IMAGE_DIR, r"spiderman.jpeg")
+    # image = cv2.imread(IMAGE_NAME)
+    # thresh_image(image, 0, 0)
 
 
-def thresh_image(image, i):
+def thresh_image(image, i, index):
     """
     Takes an image and places image through threshold process
 
@@ -91,6 +96,7 @@ def thresh_image(image, i):
     ----------
     image
     i
+    index
 
     Returns
     -------
@@ -100,10 +106,10 @@ def thresh_image(image, i):
     ret, thresh = cv2.threshold(gray, 155, 255, i)
     # cv2.imshow("thresh", thresh)
     # cv2.waitKey(0)
-    find_contour(image, thresh)
+    find_contour(image, thresh, index)
 
 
-def find_contour(image, thresh):
+def find_contour(image, thresh, index):
     """
     Finds the contours of the image.
 
@@ -121,19 +127,24 @@ def find_contour(image, thresh):
     ----------
     image
     thresh
+    index
 
     Returns
     -------
     NONE
     """
     global new_mask
-    cnts = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = imutils.grab_contours(cnts)  # changing the panels has to come from this variable cnts
-    c = max(cnts, key=cv2.contourArea)
-    output = image.copy()
+    contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    try:
+        c = sorted_contours[index]  # changing the index changes the contour position that it crops
+    except IndexError:
+        c = sorted_contours[index + 1]
 
+    # c = max(contours, key=cv2.contourArea)
+
+    output = image.copy()
     cv2.drawContours(output, [c], -1, (0, 255, 0), 10)
-    (x, yCoord, w, h) = cv2.boundingRect(c)
 
     for eps in np.linspace(0.001, 0.05, 10):
         perimeter = cv2.arcLength(c, True)
@@ -151,14 +162,15 @@ def find_contour(image, thresh):
                 for x, y in i:
                     dataX = np.append(dataX, x)
                     dataY = np.append(dataY, y)
-
+            print(dataX, "\n", dataY)
             maxY = np.max(dataY)  # these are the lowest and highest points of the image
             minY = np.min(dataY)
 
             maxX = np.max(dataX)
             minX = np.min(dataX)
             print(image.shape[0], image.shape[1])
-            print("max and min for x", maxX, minX, "\n")
+            print("max and min for x", maxX, minX)
+            print("max and min for Y", maxY, minY)
 
             # if int(maxY) < 0 or int(maxY) < int(minY):
             #    new_mask = new_mask + 1
@@ -169,8 +181,8 @@ def find_contour(image, thresh):
             # a new threshold type
             if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
                 new_mask = new_mask + 1
-                thresh_image(image, new_mask)
-
+                thresh_image(image, new_mask, index)
+            # elif maxY == maxX
             # elif int(image.shape[1]) - 10 <= int(maxY) <= int(image.shape[1]) and new_mask < 4:
             #    new_mask = new_mask + 1  # look at randomizing this so that it checks different threshold types
             #    thresh_image(image, new_mask)
@@ -187,15 +199,28 @@ def find_contour(image, thresh):
                 # if there is an issue with an image not cropping correctly I could check to see how many points it has
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
-                    # cv2.imshow("crop", crop_image)
-                    # cv2.waitKey(0)
-                    image_save(crop_image)
+                    cv2.imshow("crop", crop_image)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+                    # image_save(crop_image)
+                    if ASK_PANELS:
+                        new_panel(image, index)
+
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
-                    # cv2.imshow("crop", crop_image)
-                    # cv2.waitKey(0)
-                    # crop_image = image[int(minY): int(maxY), 0: int(image.shape[1])]
-                    image_save(crop_image)
+                    cv2.imshow("crop", crop_image)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+                    # image_save(crop_image)
+                    if ASK_PANELS:
+                        new_panel(image, index)
+
+
+def new_panel(image, index):
+    answer = input("Would you like to check for more panels\n").upper()
+    if answer == "YES":
+        threshold_type = 0
+        thresh_image(image, threshold_type, index + 1)
 
 
 def main():
