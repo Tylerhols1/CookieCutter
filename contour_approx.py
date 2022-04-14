@@ -1,20 +1,26 @@
 from PIL import Image
 import os
+import time
 import cv2
 import numpy as np
+import logging
+
+logging.basicConfig(filename="info.log", filemode="w", level=logging.INFO)
+
+logger = logging.getLogger()
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
 IMAGE_LIST = os.listdir(IMAGE_DIR)
 CROPPED_DIR = os.path.join(CURRENT_DIR, "cropped")
 IMAGE_NAME = ""
+START_TIME = float(time.time())
+FINAL_TIME = float(time.time()) - START_TIME
 new_mask = 0
 
-# Set to true if you want to be prompted to check for new contours in the image.
-# Otherwise it grabs the largest contour area
-ASK_PANELS = False
-ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
-SHOW_PANEL = False  # Set to true if you want to show the current cropped image
+ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
+ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = True  # Set to true if you want to show the current cropped image
 
 
 def create_collage():
@@ -52,6 +58,7 @@ def image_save(crop_image, index):
     """
     if not os.path.isdir(CROPPED_DIR):
         os.mkdir(CROPPED_DIR)
+        logger.info("CREATED CROPPED_DIR")
 
     file_name = os.path.basename(IMAGE_NAME)
     new_name = os.path.join(CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
@@ -61,14 +68,13 @@ def image_save(crop_image, index):
         if answer == "YES" or answer == "Y" and index == 0:
             new_name = os.path.join(CROPPED_DIR, "cropped_0" + file_name)
             cv2.imwrite(new_name, crop_image)
+            logger.info("SAVED {}".format(os.path.basename(new_name)))
         else:
             cv2.imwrite(new_name, crop_image)
+            logger.info("SAVED {}".format(os.path.basename(new_name)))
     else:
         cv2.imwrite(new_name, crop_image)
-    # TODO
-    'figure out how to log information of whether it saved or not'
-    'could also write so it tracks how many times it had to apply'
-    'new threshold type'
+        logger.info("SAVED {}".format(os.path.basename(new_name)))
 
 
 def initialize_image():
@@ -84,13 +90,14 @@ def initialize_image():
     """
     global IMAGE_NAME
     global new_mask
+    logger.info("ACCESSING {} file(s)\n".format(len(IMAGE_LIST)))
     for file in IMAGE_LIST:
         new_mask = 0
         IMAGE_NAME = os.path.join(IMAGE_DIR, file)
         image = cv2.imread(IMAGE_NAME)
         print(file)
         thresh_image(image, 0, 0)
-
+    logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
     # IMAGE_NAME = os.path.join(IMAGE_DIR, r"spiderman.jpeg")
     # image = cv2.imread(IMAGE_NAME)
     # thresh_image(image, 0, 0)
@@ -147,7 +154,6 @@ def find_contour(image, thresh, index):
     NONE
     """
     global new_mask
-    print(index)
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
@@ -176,23 +182,14 @@ def find_contour(image, thresh, index):
                 for x, y in i:
                     dataX = np.append(dataX, x)
                     dataY = np.append(dataY, y)
-            print(dataX, "\n", dataY)
             maxY = np.max(dataY)  # these are the lowest and highest points of the image
             minY = np.min(dataY)
 
             maxX = np.max(dataX)
             minX = np.min(dataX)
-            print(image.shape[0], image.shape[1])
-            print("max and min for x", maxX, minX)
-            print("max and min for Y", maxY, minY)
 
-            # if int(maxY) < 0 or int(maxY) < int(minY):
-            #    new_mask = new_mask + 1
-            #    thresh_image(image, new_mask)
-
-            # To safeguard against images not being approximated with smaller coordinates
-            # than the overall image. It has it resend the image, so it is converted with
-            # a new threshold type
+            # This is to safeguard against the cropped image just barely cropping just a couple
+            # of coordinates. It resends it to try another threshold type
             if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
                 new_mask = new_mask + 1
                 thresh_image(image, new_mask, index)
@@ -213,8 +210,6 @@ def find_contour(image, thresh, index):
                 # better approximate the panel it was trying to grab. Otherwise, it just crops
                 # to the 4> point contour approximation which is most likely not the entirety of
                 # the panel we want
-
-                # if there is an issue with an image not cropping correctly I could check to see how many points it has
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
                     if SHOW_PANEL:
@@ -222,6 +217,8 @@ def find_contour(image, thresh, index):
                         cv2.waitKey(0)
                         cv2.destroyAllWindows()
                     image_save(crop_image, index)
+                    logger.info(
+                        "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
@@ -231,6 +228,8 @@ def find_contour(image, thresh, index):
                         cv2.waitKey(0)
                         cv2.destroyAllWindows()
                     image_save(crop_image, index)
+                    logger.info(
+                        "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
