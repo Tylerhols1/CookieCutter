@@ -1,5 +1,4 @@
 from PIL import Image
-import imutils
 import os
 import cv2
 import numpy as np
@@ -13,8 +12,9 @@ new_mask = 0
 
 # Set to true if you want to be prompted to check for new contours in the image.
 # Otherwise it grabs the largest contour area
-ASK_PANELS = True
-ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
+ASK_PANELS = False
+ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = False  # Set to true if you want to show the current cropped image
 
 
 def create_collage():
@@ -54,7 +54,7 @@ def image_save(crop_image, index):
         os.mkdir(CROPPED_DIR)
 
     file_name = os.path.basename(IMAGE_NAME)
-    new_name = os.path.join(CROPPED_DIR, "cropped0{}_".format(str(index)) + file_name)
+    new_name = os.path.join(CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
 
     if ASK_SAVE:
         answer = input("Did you want to save this? Yes/no || Y/N").upper()
@@ -118,8 +118,7 @@ def thresh_image(image, i, index):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 155, 255, i)
-    # cv2.imshow("thresh", thresh)
-    # cv2.waitKey(0)
+
     find_contour(image, thresh, index)
 
 
@@ -218,17 +217,19 @@ def find_contour(image, thresh, index):
                 # if there is an issue with an image not cropping correctly I could check to see how many points it has
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
-                    cv2.imshow("crop", crop_image)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                    if SHOW_PANEL:
+                        cv2.imshow("crop", crop_image)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
                     image_save(crop_image, index)
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
-                    cv2.imshow("crop", crop_image)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                    if SHOW_PANEL:
+                        cv2.imshow("crop", crop_image)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
                     image_save(crop_image, index)
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
