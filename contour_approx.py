@@ -64,14 +64,15 @@ def image_save(crop_image, index):
     new_name = os.path.join(CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
 
     if ASK_SAVE:
-        answer = input("Did you want to save this? Yes/no || Y/N").upper()
-        if answer == "YES" or answer == "Y" and index == 0:
-            new_name = os.path.join(CROPPED_DIR, "cropped_0" + file_name)
-            cv2.imwrite(new_name, crop_image)
-            logger.info("SAVED {}".format(os.path.basename(new_name)))
-        else:
-            cv2.imwrite(new_name, crop_image)
-            logger.info("SAVED {}".format(os.path.basename(new_name)))
+        answer = input("Did you want to save this? Yes/no || Y/N\n").upper()
+        if answer == "YES" or answer == "Y":
+            if index == 0:
+                new_name = os.path.join(CROPPED_DIR, "cropped_0_" + file_name)
+                cv2.imwrite(new_name, crop_image)
+                logger.info("SAVED {}".format(os.path.basename(new_name)))
+            else:
+                cv2.imwrite(new_name, crop_image)
+                logger.info("SAVED {}".format(os.path.basename(new_name)))
     else:
         cv2.imwrite(new_name, crop_image)
         logger.info("SAVED {}".format(os.path.basename(new_name)))
@@ -125,7 +126,6 @@ def thresh_image(image, i, index):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 155, 255, i)
-
     find_contour(image, thresh, index)
 
 
@@ -236,7 +236,7 @@ def find_contour(image, thresh, index):
 
 def new_panel(image, index):
     answer = input("Would you like to check for more panels\n").upper()
-    if answer == "YES":
+    if answer == "YES" or answer == "Y":
         threshold_type = 0
         if index < 13:
             thresh_image(image, threshold_type, index + 1)
