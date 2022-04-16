@@ -19,8 +19,8 @@ FINAL_TIME = float(time.time()) - START_TIME
 new_mask = 0
 
 ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
-ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
-SHOW_PANEL = True  # Set to true if you want to show the current cropped image
+ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = False  # Set to true if you want to show the current cropped image
 
 
 def create_collage():
@@ -129,6 +129,12 @@ def thresh_image(image, i, index):
     find_contour(image, thresh, index)
 
 
+def show_panel(image):
+    cv2.imshow("crop", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
 def find_contour(image, thresh, index):
     """
     Finds the contours of the image.
@@ -159,7 +165,7 @@ def find_contour(image, thresh, index):
     try:
         c = sorted_contours[index]  # changing the index changes the contour position that it crops
     except IndexError:
-        c = sorted_contours[index + 1]
+        return
 
     # c = max(contours, key=cv2.contourArea)
 
@@ -213,9 +219,7 @@ def find_contour(image, thresh, index):
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
                     if SHOW_PANEL:
-                        cv2.imshow("crop", crop_image)
-                        cv2.waitKey(0)
-                        cv2.destroyAllWindows()
+                        show_panel(crop_image)
                     image_save(crop_image, index)
                     logger.info(
                         "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
@@ -224,9 +228,7 @@ def find_contour(image, thresh, index):
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
                     if SHOW_PANEL:
-                        cv2.imshow("crop", crop_image)
-                        cv2.waitKey(0)
-                        cv2.destroyAllWindows()
+                        show_panel(crop_image)
                     image_save(crop_image, index)
                     logger.info(
                         "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
