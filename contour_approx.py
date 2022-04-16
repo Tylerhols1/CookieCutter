@@ -6,7 +6,6 @@ import numpy as np
 import logging
 
 logging.basicConfig(filename="info.log", filemode="w", level=logging.INFO)
-
 logger = logging.getLogger()
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -19,8 +18,8 @@ FINAL_TIME = float(time.time()) - START_TIME
 new_mask = 0
 
 ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
-ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
-SHOW_PANEL = False  # Set to true if you want to show the current cropped image
+ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = True  # Set to true if you want to show the current cropped image
 
 
 def create_collage():
@@ -130,6 +129,19 @@ def thresh_image(image, i, index):
 
 
 def show_panel(image):
+    """
+    Displays the current cropped image
+
+    When this is called it takes a cropped image
+    and displays it in separate window
+    Parameters
+    ----------
+    image
+
+    Returns
+    -------
+    NONE
+    """
     cv2.imshow("crop", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -159,12 +171,17 @@ def find_contour(image, thresh, index):
     -------
     NONE
     """
+    # TODO
+    # Figure out how to get rid of redundant cropped images when it shows more panels
+    # Figure how to grab the contours of 'sorted_contours[index + 1]' and compare that to the current sorted_contours
+    # could look at grabbing a second set of max and min with the index + 1 sorted_contours variable
     global new_mask
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
         c = sorted_contours[index]  # changing the index changes the contour position that it crops
     except IndexError:
+        logger.error("WENT OUT OF INDEX, INDEXING IS OUT OF {} TIME(S)".format(len(sorted_contours)))
         return
 
     # c = max(contours, key=cv2.contourArea)
@@ -222,7 +239,7 @@ def find_contour(image, thresh, index):
                         show_panel(crop_image)
                     image_save(crop_image, index)
                     logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
+                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
@@ -231,7 +248,7 @@ def find_contour(image, thresh, index):
                         show_panel(crop_image)
                     image_save(crop_image, index)
                     logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} time(s)\n".format(os.path.basename(IMAGE_NAME), new_mask))
+                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
