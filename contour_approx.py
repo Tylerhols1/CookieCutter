@@ -1,4 +1,6 @@
 from PIL import Image
+from tkinter import *
+from tkinter.ttk import *
 import os
 import time
 import cv2
@@ -128,6 +130,17 @@ def thresh_image(image, i, index):
     find_contour(image, thresh, index)
 
 
+def gui_panel():
+    # TODO look into tkinter
+    # add images to buttons in tkinter
+    window = Tk()
+    Label(window, text="window", font=("Courier New", 15)).pack(side=TOP, pady=10)
+    photo = PhotoImage(file=r"images/batman01.png")
+    photoimage = photo.subsample(2, 2)
+    Button(window, image=photoimage, compound=LEFT).pack(side=BOTTOM, pady=10)
+    mainloop()
+
+
 def show_panel(image):
     """
     Displays the current cropped image
@@ -142,9 +155,11 @@ def show_panel(image):
     -------
     NONE
     """
-    cv2.imshow("crop", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    pil_image = Image.fromarray(image)
+    pil_image.show()
+    # cv2.imshow("crop", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 def find_contour(image, thresh, index):
@@ -262,8 +277,9 @@ def new_panel(image, index):
 
 
 def main():
+    gui_panel()
     # create_collage()
-    initialize_image()
+    # initialize_image()
 
 
 if __name__ == '__main__':
