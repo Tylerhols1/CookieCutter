@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image as Img
 from tkinter import *
 from tkinter.ttk import *
 import os
@@ -19,9 +19,9 @@ START_TIME = float(time.time())
 FINAL_TIME = float(time.time()) - START_TIME
 new_mask = 0
 
-ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
-ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
-SHOW_PANEL = True  # Set to true if you want to show the current cropped image
+ASK_PANELS = False  # Set to true if you want to be prompted to check for new contours in the image.
+ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = False  # Set to true if you want to show the current cropped image
 
 
 def create_collage():
@@ -31,8 +31,8 @@ def create_collage():
     -------
     NONE
     """
-    img1 = Image.open(r"images/guts_02.jpeg").convert('RGB')
-    img2 = Image.open(r"images/berserkPanel.jpeg")
+    img1 = Img.open(r"cropped/cropped_0_hulk01.jpg").convert('RGB')
+    img2 = Img.open(r"cropped/cropped_0_alita01.jpg")
     x, y = img1.size
     print(img1.mode, img2.mode)
     img1.paste(img2, (0, 0))
@@ -79,6 +79,8 @@ def image_save(crop_image, index):
         logger.info("SAVED {}".format(os.path.basename(new_name)))
 
 
+# TODO look into having ask_panels creating all of the cropped images and then displaying those from an array or whatever
+# that would store all of the images. Maybe a hidden directory that holds the images?
 def initialize_image():
     """
     Grabs files in the images directory and processes them.
@@ -136,9 +138,13 @@ def gui_panel():
     window = Tk()
     Label(window, text="window", font=("Courier New", 15)).pack(side=TOP, pady=10)
     photo = PhotoImage(file=r"images/batman01.png")
-    photoimage = photo.subsample(2, 2)
-    Button(window, image=photoimage, compound=LEFT).pack(side=BOTTOM, pady=10)
+    photoimage = photo.subsample(3, 3)
+    Button(window, image=photoimage, compound=LEFT).pack(side=TOP, pady=10)
     mainloop()
+
+
+def check_next(image, new_mask, index):
+    thresh_image(image, new_mask, index + 1)
 
 
 def show_panel(image):
@@ -155,11 +161,8 @@ def show_panel(image):
     -------
     NONE
     """
-    pil_image = Image.fromarray(image)
+    pil_image = Img.fromarray(image)
     pil_image.show()
-    # cv2.imshow("crop", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
 
 def find_contour(image, thresh, index):
@@ -191,7 +194,7 @@ def find_contour(image, thresh, index):
     # Figure how to grab the contours of 'sorted_contours[index + 1]' and compare that to the current sorted_contours
     # could look at grabbing a second set of max and min with the index + 1 sorted_contours variable
     global new_mask
-    contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
         c = sorted_contours[index]  # changing the index changes the contour position that it crops
@@ -199,20 +202,19 @@ def find_contour(image, thresh, index):
         logger.error("WENT OUT OF INDEX, INDEXING IS OUT OF {} TIME(S)".format(len(sorted_contours)))
         return
 
-    # c = max(contours, key=cv2.contourArea)
-
     output = image.copy()
     cv2.drawContours(output, [c], -1, (0, 255, 0), 10)
+
+    # future_pic = check_next(image, new_mask, index)  # have this save the variable so its as its own instance
 
     for eps in np.linspace(0.001, 0.05, 10):
         perimeter = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, eps * perimeter, True)
         output = image.copy()
         cv2.drawContours(output, [approx], -1, (0, 0, 255), 3)
-        if eps == .05:  # could look at changing this to check for the number of points
+        if eps == .05:
             dataY = []
             dataX = []
-            # new dataX
             np.array(dataX)
             np.array(dataY)
 
@@ -226,8 +228,10 @@ def find_contour(image, thresh, index):
             maxX = np.max(dataX)
             minX = np.min(dataX)
 
+            print("number of corners", len(approx))
             # This is to safeguard against the cropped image just barely cropping just a couple
             # of coordinates. It resends it to try another threshold type
+
             if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
                 new_mask = new_mask + 1
                 thresh_image(image, new_mask, index)
@@ -251,7 +255,8 @@ def find_contour(image, thresh, index):
                 if len(approx) < 4:
                     crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
                     if SHOW_PANEL:
-                        show_panel(crop_image)
+                        color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
+                        show_panel(color_converted)
                     image_save(crop_image, index)
                     logger.info(
                         "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
@@ -260,7 +265,8 @@ def find_contour(image, thresh, index):
                 else:
                     crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
                     if SHOW_PANEL:
-                        show_panel(crop_image)
+                        color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
+                        show_panel(color_converted)
                     image_save(crop_image, index)
                     logger.info(
                         "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
@@ -269,6 +275,8 @@ def find_contour(image, thresh, index):
 
 
 def new_panel(image, index):
+    ## TODO look at creating all the images and just indexing through the images that were created
+    # might have to make find_contour a function that returns the cropped image
     answer = input("Would you like to check for more panels\n").upper()
     if answer == "YES" or answer == "Y":
         threshold_type = 0
@@ -277,8 +285,8 @@ def new_panel(image, index):
 
 
 def main():
-    gui_panel()
-    # create_collage()
+    # gui_panel()
+    create_collage()
     # initialize_image()
 
 
