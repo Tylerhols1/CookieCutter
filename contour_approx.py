@@ -2,37 +2,21 @@ from PIL import Image as Img
 #from tkinter import *
 #from tkinter.ttk import *
 from file_path import Folder
-from logger import Logger
+from logger import Info
+import logger as log
 import os
-import time
+#import time
 import cv2
 import numpy as np
 
-logger = Logger()
-
 folder = Folder()
-START_TIME = float(time.time())
-FINAL_TIME = float(time.time()) - START_TIME
-new_mask = 0
+logger = log.initialize_log()
 
+#START_TIME = float(time.time())
+#FINAL_TIME = float(time.time()) - START_TIME
 ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
 ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
 SHOW_PANEL = True  # Set to true if you want to show the current cropped image
-
-def create_collage():
-    """
-
-    Returns
-    -------
-    NONE
-    """
-    img1 = Img.open(r"cropped/cropped_0_hulk01.jpg").convert('RGB')
-    img2 = Img.open(r"cropped/cropped_0_alita01.jpg")
-    x, y = img1.size
-    print(img1.mode, img2.mode)
-    img1.paste(img2, (0, 0))
-    img1.show()
-
 
 def image_save(crop_image, index):
     """
@@ -52,26 +36,28 @@ def image_save(crop_image, index):
     -------
     NONE
     """
-    if not os.path.isdir(folder.CURRENT_DIR):
+    if not os.path.isdir(folder.CROPPED_DIR):
         os.mkdir(folder.CROPPED_DIR)
-        logger.info("CREATED CROPPED_DIR")
+        log.write_info(Info.CREATE, folder, logger)
 
     file_name = os.path.basename(folder.IMAGE_NAME)
-    new_name = os.path.join(folder.CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
+    folder.NEW_FILE_NAME = os.path.join(folder.CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
 
     if ASK_SAVE:
         answer = input("Did you want to save this? Yes/no || Y/N\n").upper()
         if answer == "YES" or answer == "Y":
             if index == 0:
-                new_name = os.path.join(folder.CROPPED_DIR, "cropped_0_" + file_name)
-                cv2.imwrite(new_name, crop_image)
-                logger.info("SAVED {}".format(os.path.basename(new_name)))
+                folder.NEW_FILE_NAME = os.path.join(folder.CROPPED_DIR, "cropped_0_" + file_name)
+                cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
+                log.write_info(Info.SAVE, folder, logger)
             else:
-                cv2.imwrite(new_name, crop_image)
-                logger.info("SAVED {}".format(os.path.basename(new_name)))
+                cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
+                log.write_info(Info.SAVE, folder, logger)
     else:
-        cv2.imwrite(new_name, crop_image)
-        logger.info("SAVED {}".format(os.path.basename(new_name)))
+        cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
+        log.write_info(Info.SAVE, folder, logger)
+
+
 
 
 # TODO look into having ask_panels creating all of the cropped images and then displaying those from an array or whatever
@@ -87,16 +73,14 @@ def initialize_image():
     -------
     NONE
     """
-    global IMAGE_NAME
-    global new_mask
     logger.info("ACCESSING {} file(s)\n".format(len(folder.IMAGE_LIST)))
     for file in folder.IMAGE_LIST:
-        new_mask = 0
+        folder.NEW_MASK = 0
         folder.IMAGE_NAME = os.path.join(folder.IMAGE_DIR, file)
-        print(folder.IMAGE_NAME, "HI")
         image = cv2.imread(folder.IMAGE_NAME)
         print(file)
         thresh_image(image, 0, 0)
+    
     logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
     # IMAGE_NAME = os.path.join(IMAGE_DIR, r"spiderman.jpeg")
     # image = cv2.imread(IMAGE_NAME)
@@ -128,17 +112,6 @@ def thresh_image(image, i, index):
     cv2.imshow("thresh", thresh)
     cv2.waitKey(0)
     find_contour(image, thresh, index)
-
-
-def gui_panel():
-    # TODO look into tkinter
-    # add images to buttons in tkinter
-    window = Tk()
-    Label(window, text="window", font=("Courier New", 15)).pack(side=TOP, pady=10)
-    photo = PhotoImage(file=r"images/batman01.png")
-    photoimage = photo.subsample(3, 3)
-    Button(window, image=photoimage, compound=LEFT).pack(side=TOP, pady=10)
-    mainloop()
 
 
 def check_next(image, new_mask, index):
@@ -191,7 +164,7 @@ def find_contour(image, thresh, index):
     # Figure out how to get rid of redundant cropped images when it shows more panels
     # Figure how to grab the contours of 'sorted_contours[index + 1]' and compare that to the current sorted_contours
     # could look at grabbing a second set of max and min with the index + 1 sorted_contours variable
-    global new_mask
+    
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
@@ -230,17 +203,17 @@ def find_contour(image, thresh, index):
             # This is to safeguard against the cropped image just barely cropping just a couple
             # of coordinates. It resends it to try another threshold type
 
-            if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and new_mask < 4:
-                new_mask = new_mask + 1
-                thresh_image(image, new_mask, index)
+            if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and folder.NEW_MASK < 4:
+                folder.NEW_MASK = folder.NEW_MASK + 1
+                thresh_image(image, folder.NEW_MASK, index)
 
             elif maxX - 10 < minX or maxY - 10 < minY:
-                new_mask += 1
-                thresh_image(image, new_mask, index)
+                folder.NEW_MASK += 1
+                thresh_image(image, folder.NEW_MASK, index)
 
             elif maxX == minX or maxY == minY:
                 index += 1
-                thresh_image(image, new_mask, index)
+                thresh_image(image, folder.NEW_MASK, index)
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
             # whether the threshold type counter (new_mask) runs out, or if a valid crop image is found
@@ -256,8 +229,8 @@ def find_contour(image, thresh, index):
                         color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
                         show_panel(color_converted)
                     image_save(crop_image, index)
-                    logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), new_mask))
+                    log.write_info(Info.RESENT, folder, logger)
+
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
@@ -266,8 +239,7 @@ def find_contour(image, thresh, index):
                         color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
                         show_panel(color_converted)
                     image_save(crop_image, index)
-                    logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), new_mask))
+                    log.write_info(Info.RESENT, folder, logger)
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
@@ -286,6 +258,13 @@ def main():
     # gui_panel()
     #create_collage()
     initialize_image()
+    #log.write_info(Info.CREATE, logger)
+    
+    #log.write_info(Info.CREATE, logger)
+    #log.write_info(Info.SAVE, logger)
+    #log.write_info(Info.ACCESS, logger)
+    #log.write_info(Info.RESENT, logger)
+    #log.write_info(Info.EXECUTE, logger)
 
 
 if __name__ == '__main__':
