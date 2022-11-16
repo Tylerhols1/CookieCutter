@@ -1,28 +1,23 @@
 from PIL import Image as Img
-from tkinter import *
-from tkinter.ttk import *
+#from tkinter import *
+#from tkinter.ttk import *
+from file_path import Folder
+from logger import Logger
 import os
 import time
 import cv2
 import numpy as np
-import logging
 
-logging.basicConfig(filename="info.log", filemode="w", level=logging.INFO)
-logger = logging.getLogger()
+logger = Logger()
 
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-IMAGE_DIR = os.path.join(CURRENT_DIR, "images")
-IMAGE_LIST = os.listdir(IMAGE_DIR)
-CROPPED_DIR = os.path.join(CURRENT_DIR, "cropped")
-IMAGE_NAME = ""
+folder = Folder()
 START_TIME = float(time.time())
 FINAL_TIME = float(time.time()) - START_TIME
 new_mask = 0
 
-ASK_PANELS = False  # Set to true if you want to be prompted to check for new contours in the image.
-ASK_SAVE = False  # Set to true if you want to be asked to save the current cropped image
-SHOW_PANEL = False  # Set to true if you want to show the current cropped image
-
+ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
+ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
+SHOW_PANEL = True  # Set to true if you want to show the current cropped image
 
 def create_collage():
     """
@@ -57,18 +52,18 @@ def image_save(crop_image, index):
     -------
     NONE
     """
-    if not os.path.isdir(CROPPED_DIR):
-        os.mkdir(CROPPED_DIR)
+    if not os.path.isdir(folder.CURRENT_DIR):
+        os.mkdir(folder.CROPPED_DIR)
         logger.info("CREATED CROPPED_DIR")
 
-    file_name = os.path.basename(IMAGE_NAME)
-    new_name = os.path.join(CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
+    file_name = os.path.basename(folder.IMAGE_NAME)
+    new_name = os.path.join(folder.CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
 
     if ASK_SAVE:
         answer = input("Did you want to save this? Yes/no || Y/N\n").upper()
         if answer == "YES" or answer == "Y":
             if index == 0:
-                new_name = os.path.join(CROPPED_DIR, "cropped_0_" + file_name)
+                new_name = os.path.join(folder.CROPPED_DIR, "cropped_0_" + file_name)
                 cv2.imwrite(new_name, crop_image)
                 logger.info("SAVED {}".format(os.path.basename(new_name)))
             else:
@@ -94,11 +89,12 @@ def initialize_image():
     """
     global IMAGE_NAME
     global new_mask
-    logger.info("ACCESSING {} file(s)\n".format(len(IMAGE_LIST)))
-    for file in IMAGE_LIST:
+    logger.info("ACCESSING {} file(s)\n".format(len(folder.IMAGE_LIST)))
+    for file in folder.IMAGE_LIST:
         new_mask = 0
-        IMAGE_NAME = os.path.join(IMAGE_DIR, file)
-        image = cv2.imread(IMAGE_NAME)
+        folder.IMAGE_NAME = os.path.join(folder.IMAGE_DIR, file)
+        print(folder.IMAGE_NAME, "HI")
+        image = cv2.imread(folder.IMAGE_NAME)
         print(file)
         thresh_image(image, 0, 0)
     logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
@@ -129,6 +125,8 @@ def thresh_image(image, i, index):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 155, 255, i)
+    cv2.imshow("thresh", thresh)
+    cv2.waitKey(0)
     find_contour(image, thresh, index)
 
 
@@ -259,7 +257,7 @@ def find_contour(image, thresh, index):
                         show_panel(color_converted)
                     image_save(crop_image, index)
                     logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
+                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
@@ -269,7 +267,7 @@ def find_contour(image, thresh, index):
                         show_panel(color_converted)
                     image_save(crop_image, index)
                     logger.info(
-                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(IMAGE_NAME), new_mask))
+                        "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), new_mask))
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
 
@@ -286,8 +284,8 @@ def new_panel(image, index):
 
 def main():
     # gui_panel()
-    create_collage()
-    # initialize_image()
+    #create_collage()
+    initialize_image()
 
 
 if __name__ == '__main__':
