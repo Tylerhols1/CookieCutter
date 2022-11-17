@@ -1,22 +1,25 @@
 from PIL import Image as Img
-#from tkinter import *
-#from tkinter.ttk import *
+
+# from tkinter import *
+# from tkinter.ttk import *
 from file_path import Folder
 from logger import Info
 import logger as log
 import os
-#import time
+
+# import time
 import cv2
 import numpy as np
 
 folder = Folder()
 logger = log.initialize_log()
 
-#START_TIME = float(time.time())
-#FINAL_TIME = float(time.time()) - START_TIME
+# START_TIME = float(time.time())
+# FINAL_TIME = float(time.time()) - START_TIME
 ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
 ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
 SHOW_PANEL = True  # Set to true if you want to show the current cropped image
+
 
 def image_save(crop_image, index):
     """
@@ -41,13 +44,17 @@ def image_save(crop_image, index):
         log.write_info(Info.CREATE, folder, logger)
 
     file_name = os.path.basename(folder.IMAGE_NAME)
-    folder.NEW_FILE_NAME = os.path.join(folder.CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name)
+    folder.NEW_FILE_NAME = os.path.join(
+        folder.CROPPED_DIR, "cropped_{}_".format(str(index)) + file_name
+    )
 
     if ASK_SAVE:
         answer = input("Did you want to save this? Yes/no || Y/N\n").upper()
         if answer == "YES" or answer == "Y":
             if index == 0:
-                folder.NEW_FILE_NAME = os.path.join(folder.CROPPED_DIR, "cropped_0_" + file_name)
+                folder.NEW_FILE_NAME = os.path.join(
+                    folder.CROPPED_DIR, "cropped_0_" + file_name
+                )
                 cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
                 log.write_info(Info.SAVE, folder, logger)
             else:
@@ -56,8 +63,6 @@ def image_save(crop_image, index):
     else:
         cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
         log.write_info(Info.SAVE, folder, logger)
-
-
 
 
 # TODO look into having ask_panels creating all of the cropped images and then displaying those from an array or whatever
@@ -73,15 +78,15 @@ def initialize_image():
     -------
     NONE
     """
-    logger.info("ACCESSING {} file(s)\n".format(len(folder.IMAGE_LIST)))
+    log.write_info(Info.ACCESS, folder, logger)
     for file in folder.IMAGE_LIST:
         folder.NEW_MASK = 0
         folder.IMAGE_NAME = os.path.join(folder.IMAGE_DIR, file)
         image = cv2.imread(folder.IMAGE_NAME)
         print(file)
         thresh_image(image, 0, 0)
-    
-    logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
+
+    log.write_info(Info.EXECUTE, folder, logger)
     # IMAGE_NAME = os.path.join(IMAGE_DIR, r"spiderman.jpeg")
     # image = cv2.imread(IMAGE_NAME)
     # thresh_image(image, 0, 0)
@@ -164,13 +169,17 @@ def find_contour(image, thresh, index):
     # Figure out how to get rid of redundant cropped images when it shows more panels
     # Figure how to grab the contours of 'sorted_contours[index + 1]' and compare that to the current sorted_contours
     # could look at grabbing a second set of max and min with the index + 1 sorted_contours variable
-    
-    contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours, hierarchy = cv2.findContours(
+        thresh.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
+    )
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
     try:
-        c = sorted_contours[index]  # changing the index changes the contour position that it crops
+        c = sorted_contours[
+            index
+        ]  # changing the index changes the contour position that it crops
     except IndexError:
-        logger.error("WENT OUT OF INDEX, INDEXING IS OUT OF {} TIME(S)".format(len(sorted_contours)))
+        log.write_info(Info.INDEX, folder, logger)
         return
 
     output = image.copy()
@@ -183,7 +192,7 @@ def find_contour(image, thresh, index):
         approx = cv2.approxPolyDP(c, eps * perimeter, True)
         output = image.copy()
         cv2.drawContours(output, [approx], -1, (0, 0, 255), 3)
-        if eps == .05:
+        if eps == 0.05:
             dataY = []
             dataX = []
             np.array(dataX)
@@ -203,7 +212,10 @@ def find_contour(image, thresh, index):
             # This is to safeguard against the cropped image just barely cropping just a couple
             # of coordinates. It resends it to try another threshold type
 
-            if int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0]) and folder.NEW_MASK < 4:
+            if (
+                int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0])
+                and folder.NEW_MASK < 4
+            ):
                 folder.NEW_MASK = folder.NEW_MASK + 1
                 thresh_image(image, folder.NEW_MASK, index)
 
@@ -224,7 +236,9 @@ def find_contour(image, thresh, index):
                 # to the 4> point contour approximation which is most likely not the entirety of
                 # the panel we want
                 if len(approx) < 4:
-                    crop_image = image[int(minY): int(maxY), int(minX): int(image.shape[1])]
+                    crop_image = image[
+                        int(minY) : int(maxY), int(minX) : int(image.shape[1])
+                    ]
                     if SHOW_PANEL:
                         color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
                         show_panel(color_converted)
@@ -234,7 +248,7 @@ def find_contour(image, thresh, index):
                     if ASK_PANELS and index < 13:
                         new_panel(image, index)
                 else:
-                    crop_image = image[int(minY): int(maxY), int(minX): int(maxX)]
+                    crop_image = image[int(minY) : int(maxY), int(minX) : int(maxX)]
                     if SHOW_PANEL:
                         color_converted = cv2.cvtColor(crop_image, cv2.COLOR_BGR2RGB)
                         show_panel(color_converted)
@@ -256,16 +270,10 @@ def new_panel(image, index):
 
 def main():
     # gui_panel()
-    #create_collage()
+    # create_collage()
     initialize_image()
-    #log.write_info(Info.CREATE, logger)
-    
-    #log.write_info(Info.CREATE, logger)
-    #log.write_info(Info.SAVE, logger)
-    #log.write_info(Info.ACCESS, logger)
-    #log.write_info(Info.RESENT, logger)
-    #log.write_info(Info.EXECUTE, logger)
+    # log.write_info(Info.CREATE, folder, logger)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
