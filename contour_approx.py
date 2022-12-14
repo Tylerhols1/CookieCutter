@@ -4,7 +4,9 @@ from PIL import Image as Img
 # from tkinter.ttk import *
 from file_path import Folder
 from logger import Info
+from thresh import Thresh
 import logger as log
+import thresh as th
 import os
 
 # import time
@@ -12,10 +14,13 @@ import cv2
 import numpy as np
 
 folder = Folder()
+#thresh = Thresh()
 logger = log.initialize_log()
+
 
 # START_TIME = float(time.time())
 # FINAL_TIME = float(time.time()) - START_TIME
+
 ASK_PANELS = True  # Set to true if you want to be prompted to check for new contours in the image.
 ASK_SAVE = True  # Set to true if you want to be asked to save the current cropped image
 SHOW_PANEL = True  # Set to true if you want to show the current cropped image
@@ -51,15 +56,8 @@ def image_save(crop_image, index):
     if ASK_SAVE:
         answer = input("Did you want to save this? Yes/no || Y/N\n").upper()
         if answer == "YES" or answer == "Y":
-            if index == 0:
-                folder.NEW_FILE_NAME = os.path.join(
-                    folder.CROPPED_DIR, "cropped_0_" + file_name
-                )
-                cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
-                log.write_info(Info.SAVE, folder, logger)
-            else:
-                cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
-                log.write_info(Info.SAVE, folder, logger)
+            cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
+            log.write_info(Info.SAVE, folder, logger)
     else:
         cv2.imwrite(folder.NEW_FILE_NAME, crop_image)
         log.write_info(Info.SAVE, folder, logger)
@@ -79,48 +77,26 @@ def initialize_image():
     NONE
     """
     log.write_info(Info.ACCESS, folder, logger)
+
     for file in folder.IMAGE_LIST:
         folder.NEW_MASK = 0
         folder.IMAGE_NAME = os.path.join(folder.IMAGE_DIR, file)
         image = cv2.imread(folder.IMAGE_NAME)
-        print(file)
-        thresh_image(image, 0, 0)
+        thresh = Thresh(image)
 
+        
+        print("Name of the file: ", file)
+
+
+
+        new_thresh = th.thresh_image(thresh.image, 0, 0)
+        find_contour(thresh.image, new_thresh, thresh.index) 
+        ## when this function does its thing there is no way to check and compare teh new thresh because its not in a loop
+        
     log.write_info(Info.EXECUTE, folder, logger)
-    # IMAGE_NAME = os.path.join(IMAGE_DIR, r"spiderman.jpeg")
-    # image = cv2.imread(IMAGE_NAME)
-    # thresh_image(image, 0, 0)
-
-
-def thresh_image(image, i, index):
-    """
-    Takes an image and places image through threshold process
-
-    The image parameter is converted to grayscale
-    and then converted into a new image with threshold.
-    With threshold, we assign pixel values with the given
-    threshold values and then send that new threshold image
-    to the function 'find_contour'
-
-    Parameters
-    ----------
-    image
-    i
-    index
-
-    Returns
-    -------
-    NONE
-    """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(gray, 155, 255, i)
-    cv2.imshow("thresh", thresh)
-    cv2.waitKey(0)
-    find_contour(image, thresh, index)
-
 
 def check_next(image, new_mask, index):
-    thresh_image(image, new_mask, index + 1)
+    th.thresh_image(image, new_mask, index + 1)
 
 
 def show_panel(image):
@@ -217,15 +193,15 @@ def find_contour(image, thresh, index):
                 and folder.NEW_MASK < 4
             ):
                 folder.NEW_MASK = folder.NEW_MASK + 1
-                thresh_image(image, folder.NEW_MASK, index)
+                th.thresh_image(image, folder.NEW_MASK, index)
 
             elif maxX - 10 < minX or maxY - 10 < minY:
                 folder.NEW_MASK += 1
-                thresh_image(image, folder.NEW_MASK, index)
+                th.thresh_image(image, folder.NEW_MASK, index)
 
             elif maxX == minX or maxY == minY:
                 index += 1
-                thresh_image(image, folder.NEW_MASK, index)
+                th.thresh_image(image, folder.NEW_MASK, index)
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
             # whether the threshold type counter (new_mask) runs out, or if a valid crop image is found
@@ -265,14 +241,19 @@ def new_panel(image, index):
     if answer == "YES" or answer == "Y":
         threshold_type = 0
         if index < 13:
-            thresh_image(image, threshold_type, index + 1)
+            th.thresh_image(image, threshold_type, index + 1)
 
 
 def main():
     # gui_panel()
     # create_collage()
     initialize_image()
-    # log.write_info(Info.CREATE, folder, logger)
+    #log.write_info(Info.CREATE, folder, logger)
+    #log.write_info(Info.SAVE, folder, logger)
+    #log.write_info(Info.ACCESS, folder, logger)
+    #log.write_info(Info.RESENT, folder, logger)
+
+
 
 
 if __name__ == "__main__":
