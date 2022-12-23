@@ -14,7 +14,6 @@ import cv2
 import numpy as np
 
 folder = Folder()
-#thresh = Thresh()
 logger = log.initialize_log()
 
 
@@ -66,6 +65,7 @@ def image_save(crop_image, index):
 # TODO look into having ask_panels creating all of the cropped images and then displaying those from an array or whatever
 # that would store all of the images. Maybe a hidden directory that holds the images?
 def initialize_image():
+    global thresh_object
     """
     Grabs files in the images directory and processes them.
 
@@ -82,15 +82,10 @@ def initialize_image():
         folder.NEW_MASK = 0
         folder.IMAGE_NAME = os.path.join(folder.IMAGE_DIR, file)
         image = cv2.imread(folder.IMAGE_NAME)
-        thresh = Thresh(image)
-
-        
+        thresh_object = Thresh(image)
         print("Name of the file: ", file)
-
-
-
-        new_thresh = th.thresh_image(thresh.image, 0, 0)
-        find_contour(thresh.image, new_thresh, thresh.index) 
+        new_thresh = thresh_object.thresh_image(thresh_object.image, 0, 0)
+        find_contour(thresh_object.image, new_thresh, thresh_object.index) 
         ## when this function does its thing there is no way to check and compare teh new thresh because its not in a loop
         
     log.write_info(Info.EXECUTE, folder, logger)
@@ -145,7 +140,7 @@ def find_contour(image, thresh, index):
     # Figure out how to get rid of redundant cropped images when it shows more panels
     # Figure how to grab the contours of 'sorted_contours[index + 1]' and compare that to the current sorted_contours
     # could look at grabbing a second set of max and min with the index + 1 sorted_contours variable
-
+    global thresh_object
     contours, hierarchy = cv2.findContours(
         thresh.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
     )
@@ -192,16 +187,19 @@ def find_contour(image, thresh, index):
                 int(image.shape[0]) - 5 <= int(maxY) <= int(image.shape[0])
                 and folder.NEW_MASK < 4
             ):
-                folder.NEW_MASK = folder.NEW_MASK + 1
-                th.thresh_image(image, folder.NEW_MASK, index)
+                folder.NEW_MASK += 1
+                another_thresh = thresh_object.thresh_image(image, folder.NEW_MASK, index)
+                find_contour(thresh_object.image, another_thresh, thresh_object.index) 
 
             elif maxX - 10 < minX or maxY - 10 < minY:
                 folder.NEW_MASK += 1
-                th.thresh_image(image, folder.NEW_MASK, index)
+                another_thresh = thresh_object.thresh_image(image, folder.NEW_MASK, index)
+                find_contour(thresh_object.image, another_thresh, thresh_object.index) 
 
             elif maxX == minX or maxY == minY:
                 index += 1
-                th.thresh_image(image, folder.NEW_MASK, index)
+                another_thresh = thresh_object.thresh_image(image, folder.NEW_MASK, index)
+                find_contour(thresh_object.image, another_thresh, thresh_object.index) 
 
             # Otherwise, crop the image with the highest and lowest coordinates the image provides
             # whether the threshold type counter (new_mask) runs out, or if a valid crop image is found
@@ -239,9 +237,9 @@ def new_panel(image, index):
     # might have to make find_contour a function that returns the cropped image
     answer = input("Would you like to check for more panels\n").upper()
     if answer == "YES" or answer == "Y":
-        threshold_type = 0
         if index < 13:
-            th.thresh_image(image, threshold_type, index + 1)
+            another_thresh = thresh_object.thresh_image(image, folder.NEW_MASK, index + 1)
+            find_contour(thresh_object.image, another_thresh, thresh_object.index) 
 
 
 def main():

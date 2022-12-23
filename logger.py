@@ -29,8 +29,9 @@ def write_info(Info, folder, logger):
             logger.info("RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), folder.NEW_MASK))
         
         elif Info == Info.EXECUTE:
-            logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
+            None
+            #logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
 
         elif Info == Info.INDEX:
-            logger.error("WENT OUT OF INDEX, INDEXING IS OUT OF {} TIME(S)".format(len(sorted_contours)))
+            logger.error("WENT OUT OF INDEX")
    
