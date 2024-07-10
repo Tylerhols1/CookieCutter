@@ -3,3 +3,5 @@
 info.log
 /__pycache__/
 /.idea/
+/.venv/
+
