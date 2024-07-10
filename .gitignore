@@ -3,4 +3,9 @@
 info.log
 /__pycache__/
 /.idea/
+<<<<<<< HEAD
 /.venv/
+=======
+/.venv/
+
+>>>>>>> 454e3a3e6237578f1c4c325f7256e198493ad02b
