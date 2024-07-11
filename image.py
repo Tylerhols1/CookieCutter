@@ -25,7 +25,7 @@ class Image:
         and then converted into a new image with threshold.
         With threshold, we assign pixel values with the given
         threshold values and then send that new threshold image
-        to the function 'find_contour'
+        to the function 'find_contours'
         Parameters
         ----------
         self
@@ -87,12 +87,12 @@ class Image:
                 self.max_x = np.max(data_x)
                 self.min_x = np.min(data_x)
 
-    def add_cropped_image(self, cropped_image):
-        self.cropped_images.append(cropped_image)
+    # def add_cropped_image(self, cropped_image):
+    #     self.cropped_images.append(cropped_image)
 
-    def list_cropped_images(self):
-        None
-        # TODO
+    # def list_cropped_images(self):
+    #     None
+    #     # TODO
 
     def set_mask(self, mask):
         self.mask = mask
