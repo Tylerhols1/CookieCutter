@@ -18,7 +18,7 @@ def initialize_log():
     return logger
 
 
-def write_info(info_type, folder, logger):
+def write_info(info_type, folder, logger, comic_image):
     if info_type == info_type.CREATE:
         logger.info("CREATED CROPPED_DIR")
 
@@ -30,7 +30,8 @@ def write_info(info_type, folder, logger):
 
     elif info_type == info_type.RESENT:
         logger.info(
-            "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME), folder.NEW_MASK))
+            "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME),
+                                                              comic_image.get_mask()))
 
     elif info_type == info_type.EXECUTE:
         None
