@@ -126,3 +126,6 @@ class Image:
 
     def get_index(self):
         return self.index
+
+    def get_thresh(self):
+        return self.thresh
