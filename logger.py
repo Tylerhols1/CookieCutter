@@ -10,6 +10,7 @@ class Info(Enum):
     RESENT = 4
     EXECUTE = 5
     INDEX = 6
+    TEXT = 7
 
 
 def initialize_log():
@@ -23,14 +24,14 @@ def write_info(info_type, folder, logger, comic_image):
         logger.info("CREATED CROPPED_DIR")
 
     elif info_type == info_type.SAVE:
-        logger.info("SAVED {}".format(os.path.basename(folder.NEW_FILE_NAME)))
+        logger.info("SAVED {}".format(os.path.basename(comic_image.get_name())))
 
     elif info_type == info_type.ACCESS:
-        logger.info("ACCESSING {} file(s)\n".format(len(folder.IMAGE_LIST)))
+        logger.info("ACCESSING {} file(s) in images/\n".format(folder.get_image_list_len()))
 
     elif info_type == info_type.RESENT:
         logger.info(
-            "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(folder.IMAGE_NAME),
+            "RESENT {} THROUGH THRESHOLD {} TIME(S)\n".format(os.path.basename(comic_image.get_name()),
                                                               comic_image.get_mask()))
 
     elif info_type == info_type.EXECUTE:
@@ -39,3 +40,4 @@ def write_info(info_type, folder, logger, comic_image):
         # logger.info("PROGRAM EXECUTED IN {}".format(FINAL_TIME))
     elif info_type == info_type.INDEX:
         logger.error("WENT OUT OF INDEX")
+

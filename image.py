@@ -6,12 +6,12 @@ import numpy as np
 # TODO LOOK INTO SUPERS AND SUBCLASSES FOR THE IMAGES AND CROPPED IMAGES TO SEPARATE FURTHER
 #  IMAGE WOULD BE THE SUPER AND THE SUBCLASS WOULD BE THE CROPPED IMAGE
 class Image:
-    def __init__(self, image):
-        self.cropped_images = []
+    def __init__(self, name, image):
         self.ret = None
         self.thresh = None
         self.approx = None
         self.image = image
+        self.name = name
         self.index = 0
         self.mask = 0
         self.max_y = 0
@@ -94,6 +94,10 @@ class Image:
     #     None
     #     # TODO
 
+    def next_panel(self):
+        self.set_mask(0)
+        self.set_index(self.get_index() + 1)
+
     def set_mask(self, mask):
         self.mask = mask
 
@@ -102,6 +106,9 @@ class Image:
 
     def get_image(self):
         return self.image
+
+    def set_image(self, image):
+        self.image = image
 
     def get_corners(self):
         return len(self.approx)
@@ -129,3 +136,6 @@ class Image:
 
     def get_thresh(self):
         return self.thresh
+
+    def get_name(self):
+        return self.name
