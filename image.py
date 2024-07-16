@@ -10,6 +10,7 @@ class Image:
         self.ret = None
         self.thresh = None
         self.approx = None
+        self.cropped_images = []
         self.image = image
         self.name = name
         self.index = 0
@@ -87,12 +88,12 @@ class Image:
                 self.max_x = np.max(data_x)
                 self.min_x = np.min(data_x)
 
-    # def add_cropped_image(self, cropped_image):
-    #     self.cropped_images.append(cropped_image)
+    def add_cropped_list(self, cropped_list):
+        for image in cropped_list:
+            self.cropped_images.append(image)
 
-    # def list_cropped_images(self):
-    #     None
-    #     # TODO
+    def get_cropped_list(self):
+        return self.cropped_images
 
     def next_panel(self):
         self.set_mask(0)

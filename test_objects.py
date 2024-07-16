@@ -17,6 +17,7 @@ cropped_images = []
 
 def create_cropped_dir():
     crop_dir = folder.get_cropped_path()
+    print(crop_dir)
     if not os.path.isdir(crop_dir):
         os.mkdir(crop_dir)
         log.write_info(Info.CREATE, folder, logger, None)
@@ -25,18 +26,7 @@ def create_cropped_dir():
 
 
 def initialize_images():
-    """
-    Grabs files in the images directory and processes them.
-
-    Takes each file, grabs the name of the image, and then reads
-    and sends the image to the function 'thresh_image' for processing.
-
-    Returns
-    -------
-    NONE
-    """
     log.write_info(Info.ACCESS, folder, logger, None)
-
     for file in folder.get_image_list():
         image_name = str(os.path.join(folder.get_image_dir_path(), file))
         cv2_object = cv2.imread(image_name)
@@ -47,26 +37,24 @@ def initialize_images():
 
 def initialize_cropped_images():
     global cropped_images
-    image_list = []
+    cropped_list = []
     for image in images:
         index = 0
-        while index < 13:
+        while index < 4:
             image_shape = image.get_image()
             image_name = image.get_name()
             crop_image_name = str(
                 os.path.join(folder.get_cropped_path(), "cropped_{}_{}".format(index, image.get_name())))
 
-            # It is creating new objects which is why the images are not changing
-            # Look at keeping track of the index and assigning it to a crop object instead
-            # of the Image class keeping track of the index
-            cropped_image = Cropped(image_shape, image_name, crop_image_name)
-
+            cropped_image = Cropped(image_shape, image_name, crop_image_name, index)
             check_corners(cropped_image)
             cv2.imwrite(crop_image_name, cropped_image.get_image())
+            cropped_list.append(cropped_image)
             print(crop_image_name)
-            image_list.append(cropped_image)
-            cropped_image.next_panel()
             index += 1
+        image.add_cropped_list(cropped_list)
+        cropped_list.clear()
+        cropped_images.append(image)
 
 
 def check_corners(comic_image):
@@ -102,30 +90,18 @@ def check_corners(comic_image):
             crop_image = image[min_y: max_y, min_x: image.shape[1]]
         else:
             crop_image = image[min_y: max_y, min_x: max_x]
-        # cv2.imshow("crop_image", crop_image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
         comic_image.set_image(crop_image)
-        # image_save(crop_image, image_index, comic_image)
-        # log.write_info(Info.RESENT, folder, logger, comic_image)
-
-
-def next_panel(comic_image):
-    # TODO look at creating all the images and just indexing through the images that were created
-    # might have to make find_contour a function that returns the cropped_old image
-    # if ASK_PANELS:
-    #    answer = input("Would you like to check for more panels\n").upper()
-    #    if answer == "YES" or answer == "Y":
-    comic_image.set_mask(0)
-    comic_image.set_index(comic_image.get_index() + 1)
 
 
 def main():
     create_cropped_dir()
-    initialize_images()
-    initialize_cropped_images()
-    for i in cropped_images:
-        print(i)
+    #initialize_images()
+    #initialize_cropped_images()
+    #for image in cropped_images:
+    #    for i, crop in enumerate(image.get_cropped_list()):
+    #        print(crop.get_crop_name(), '\n', crop)
+    #        print()
+    #print(len(cropped_images))
     # save_images()
     # TODO: Implement the global variables
 
